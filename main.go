@@ -26,11 +26,18 @@ func watch() (err error) {
 	}
 	ns := os.Getenv("TEAM_NAMESPACE")
 	log.Printf("Using namespace %s", ns)
-	client, err := jenkinsclientv1.NewForConfig(config)
+	jclient, err := jenkinsclientv1.NewForConfig(config)
 	if err != nil {
 		return err
 	}
-	watch, err := client.PipelineActivities(ns).Watch(metav1.ListOptions{})
+
+	list, err := jclient.PipelineActivities(ns).List(metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	log.Print(list)
+
+	watch, err := jclient.PipelineActivities(ns).Watch(metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -77,7 +84,7 @@ func watch() (err error) {
 							},
 							Counts: counts,
 						}
-						act, err = client.PipelineActivities(act.Namespace).Update(act)
+						act, err = jclient.PipelineActivities(act.Namespace).Update(act)
 						log.Printf("Updated PipelineActivity %s with data from %s\n", act.Name, url)
 						if err != nil {
 							log.Println(errors.Wrap(err, fmt.Sprintf("Error updating PipelineActivity %s", act.Name)))
